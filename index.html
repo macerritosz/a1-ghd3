@@ -122,16 +122,6 @@
           .attr("stroke", "black")
           .attr("stroke-width", 2)
           .attr("fill", "none");
-      
-          // extreme points points
-        svg.selectAll("circle")
-        .data(extremePoints)
-        .enter()
-        .append("circle")
-        .attr("cx", d => projection(d.coords)[0])
-        .attr("cy", d => projection(d.coords)[1])
-        .attr("r", 5)
-        .attr("fill", "orange");
 
 
         // center of county points
