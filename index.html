@@ -26,15 +26,7 @@
       {name: "Tarrant County Center", coords: [-97.29116473,32.77185236]},
       {name: "Harris County Center", coords:[-95.39782106,29.85967144]},
       {name: "Travis County Center", coords: [-97.78194654,30.33423319]}
-    ]
-
-    // Add Rectangles - Metro Area coverage
-    
-    // Add Circles - City centers
-
-    // Add Lines - 
-
-    // Add Polygons - Triangle connecting Tarrant (DFW), Travis(Austin), Harris (Houston) Counties
+    ];
 
     //MAP PROJECTIONS
 
@@ -52,10 +44,30 @@
 
     var path = d3.geoPath().projection(projection);
 
+    // Add Rectangles - Metro Area coverage
+    // min x, min y, max x, max y for lat and longitude
+    const metroAreas = [
+      {name:"DFW", coords:[-98.05,31.78,-95.97,33.69], color: "blue"},
+      {name:"HTX", coords:[-96.46,28.85,-94.62,30.63], color:"red"},
+      {name:"AUS", coords:[-98.35,29.83,-96.95,30.98], color:"orange"}
+    ]
+
+    // Add Lines - 
+    const linesConnect = d3.line()
+        .defined(d => d)
+        .x(d => projection(d.coords)[0])
+        .y(d => projection(d.coords)[1]);
+    
+    const lineData = linesConnect(points) + "Z";
+
+    // Add Polygons - Triangle connecting Tarrant (DFW), Travis(Austin), Harris (Houston) Counties  
+      
+
     // Map from https://github.com/Cincome/tx.geojson/blob/master/counties/tx_counties.geojson 
     // fucntion adapted from https://www.geeksforgeeks.org/javascript/d3-js-json-function/ but updated for newer versions of d3.js
 
     d3.json("tx_counties.geojson").then(function(json) {
+      // map 
       svg.selectAll("path")
         .data(json.features)
         .enter()
@@ -63,15 +75,44 @@
         .attr("d", path)
         .attr("fill","#d3d3d3");
 
-      svg.selectAll("circle")
+      // metro area rectangles 
+      svg.selectAll(".metro") // define a seperate metro class
+        .data(metroAreas)
+        .enter()
+        .append("rect")
+        .attr("class", "metro")
+        .attr("x", d => projection([d.coords[0], d.coords[3]])[0]) // x values subtracted for center
+        .attr("y", d => projection([d.coords[0], d.coords[3]])[1]) // y values subtracted for center 
+        .attr("width", d =>
+                projection([d.coords[2], d.coords[3]])[0] -
+                projection([d.coords[0], d.coords[3]])[0]
+             ) // (right-most xy) - (leftmost) xy = width
+        .attr("height", d =>
+                projection([d.coords[0], d.coords[1]])[1] -
+                projection([d.coords[0], d.coords[3]])[1]
+             ) // same for length but with height coords
+        .attr("fill", d => d.color)
+        .attr("fill-opacity", 0.3)
+        .attr("stroke", d => d.color);
+
+        // Texas Triangle lines
+        svg.append("path")
+          .attr("d", lineData)
+          .attr("stroke", "currentColor")
+          .attr("fill", "none");
+
+        // center of county points
+        svg.selectAll("circle")
         .data(points)
         .enter()
         .append("circle")
         .attr("cx", d => projection(d.coords)[0])
         .attr("cy", d => projection(d.coords)[1])
         .attr("r", 5)
-        .attr("fill", "blue")
-  
+        .attr("fill", "green");
+
+        
+        
 			}).catch(function(error){
         console.log("Error with Json", error)
       })
