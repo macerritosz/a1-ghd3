@@ -53,14 +53,25 @@
     ]
 
     // Add Lines - 
+    // extreme points between the panhandle tip and riogrande delta
+    const extremePoints = [
+      {name:"Pan Handle", coords: [-102.82, 36.4] },
+      { name: "Rio Grande", coords: [-97.23, 26] }
+    ]
+
     const linesConnect = d3.line()
         .defined(d => d)
         .x(d => projection(d.coords)[0])
         .y(d => projection(d.coords)[1]);
     
-    const lineData = linesConnect(points) + "Z";
+    const lineData = linesConnect(extremePoints);
 
     // Add Polygons - Triangle connecting Tarrant (DFW), Travis(Austin), Harris (Houston) Counties  
+    const trianglePoints = [
+        points[0], // Tarrant County
+        points[2], // Travis County
+        points[1]  // Harris County
+    ];
       
 
     // Map from https://github.com/Cincome/tx.geojson/blob/master/counties/tx_counties.geojson 
@@ -95,11 +106,33 @@
         .attr("fill-opacity", 0.3)
         .attr("stroke", d => d.color);
 
-        // Texas Triangle lines
+        // Texas triangle
+        svg.append("polygon")
+        .attr("points", trianglePoints
+            .map(d => projection(d.coords).join(","))
+            .join(" "))
+        .attr("fill", "purple")
+        .attr("fill-opacity", 0.15)
+        .attr("stroke", "purple")
+        .attr("stroke-width", 3);
+
+      // extreme points line
         svg.append("path")
           .attr("d", lineData)
-          .attr("stroke", "currentColor")
+          .attr("stroke", "black")
+          .attr("stroke-width", 2)
           .attr("fill", "none");
+      
+          // extreme points points
+        svg.selectAll("circle")
+        .data(extremePoints)
+        .enter()
+        .append("circle")
+        .attr("cx", d => projection(d.coords)[0])
+        .attr("cy", d => projection(d.coords)[1])
+        .attr("r", 5)
+        .attr("fill", "orange");
+
 
         // center of county points
         svg.selectAll("circle")
@@ -110,8 +143,6 @@
         .attr("cy", d => projection(d.coords)[1])
         .attr("r", 5)
         .attr("fill", "green");
-
-        
         
 			}).catch(function(error){
         console.log("Error with Json", error)
